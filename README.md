@@ -9,4 +9,6 @@ A tool for calculating buildout numbers for parcels in NJ under current zoning a
 
 ## Updates needed
 - Wider support for various zoning laws (these change with every municipality)
+- Only works with Hopewell Twp. (Cumberland), Carney's Point Twp., and Oldmans Township so far (due to the 
+  scope of this project and the availability of data
 - Though not slow, anything to make the program run faster would be appreciated
