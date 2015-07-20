@@ -6,9 +6,10 @@
 # Lastest Update - 13 July 2015
 #
 # ArcMap script parameters (in this order):
-#       Zoning - Feature Class
-#       Municipality Name - String
-#       Output Location - Workspace
+#       Zoning - Required Feature Class
+#       Municipality Name - Required String
+#       Additional Constraints - Optional Multivalue Feature Class 
+#       Output Location - Required Workspace
 ####################################################################################################################################
 
 import arcpy, math, sets
@@ -177,10 +178,27 @@ def buildoutCalculations(featureClass, isPost):
 arcpy.env.overwriteOutput = True
 zoning = arcpy.GetParameterAsText(0)
 muniName = arcpy.GetParameterAsText(1)
-outputWorkspace = arcpy.GetParameterAsText(2)
+outputWorkspace = arcpy.GetParameterAsText(3)
+
+# An array that will contain all temp files that will be deleted at the very end
+deleteFiles = []
+
+# Merge the additional constraints
+add_constraints = ''
+if arcpy.GetParameterAsText(2):
+        arcpy.AddMessage('Clipping Optional Constraints...')
+        add_const_paths = []
+        count = 1
+        for constraint in arcpy.GetParameterAsText(2).split(';'):
+                file_name = 'muni_op_constraint_%s'%(count)
+                add_const_paths.append(arcpy.Clip_analysis(constraint, zoning, file_name))
+                deleteFiles.append(file_name)
+                count += 1
+        add_constraints = arcpy.Merge_management(add_const_paths, 'muni_add_const')
+        deleteFiles.append(add_constraints)
+                
 
 arcpy.env.workspace = 'R:\\Salem\\model_inputs.gdb'
-deleteFiles = []
 
 inputs = ['nhd_waterbodies', 'NO3_densities',  'openspace_county', 'openspace_state',  'parcels',  'preserved_farms', 
 		  'swqs',  'water_purveyors',  'wetlands', 'Land_Use_Land_Cover_2012', 'sewer_service_area']
@@ -205,7 +223,7 @@ sewer_area = 'muni_sewer_service_area'
 
 # Calculate minimum lot size values for the individual zones
 arcpy.AddMessage('Calculating minimum lot sizes...')
-zoning = minimumLotSize(zoning, arcpy.GetParameterAsText(2))
+zoning = minimumLotSize(zoning, arcpy.GetParameterAsText(3))
 deleteFiles.append(zoning)
 
 # Selecting zoned open space (may differ from other OS)
@@ -268,6 +286,8 @@ deleteFiles.append(urban_lu)
 
 # Creating the constraints layer and erasing the constraints
 constraintsFiles = [urban_lu, c1_buffers, c2_buffers, wetlands, waterbodies, OS_State, OS_County, zoned_OS, farms]
+if add_constraints != '':
+        constraintsFiles.append(add_constraints) # optional constraints
 constraints = arcpy.Merge_management(constraintsFiles, 'muni_constraints')
 currentFile = arcpy.Erase_analysis(currentFile, constraints, 'muni_constraints_erased')
 deleteFiles.append(constraints)
