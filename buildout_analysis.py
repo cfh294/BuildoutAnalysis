@@ -324,8 +324,7 @@ for row in cursor:
 del row, cursor
 
 # Dissolve parts of parcels on pams pin, sum the buildout numbers								        
-currentFile = arcpy.Dissolve_management(currentFile, 'muni_result_combined', ['PAMS_PIN', 'Zone_ID', 'SYSTEM'], 
-										[['CZBO_POST', 'SUM'], ['NO3BO_POST', 'SUM'], ['CZBO_PRE', 'SUM'], ['NO3BO_PRE', 'SUM']])
+currentFile = arcpy.Dissolve_management(currentFile, 'muni_result_combined', ['PAMS_PIN', 'Zone_ID', 'SYSTEM'], [['CZBO_POST', 'SUM'], ['NO3BO_POST', 'SUM'], ['CZBO_PRE', 'SUM'], ['NO3BO_PRE', 'SUM']])
 										
 
 
@@ -347,7 +346,7 @@ for row in cursor:
 	cursor.updateRow(row)
 del row, cursor
 
-arcpy.DeleteField_management(currentFile, 'SUM_NO3BO_POST')
+arcpy.DeleteField_management(currentFile, 'SUM_CZBO_POST')
 arcpy.DeleteField_management(currentFile, 'SUM_CZBO_PRE')
 arcpy.DeleteField_management(currentFile, 'SUM_NO3BO_POST')
 arcpy.DeleteField_management(currentFile, 'SUM_NO3BO_PRE')
@@ -375,6 +374,7 @@ arcpy.AddField_management(currentFile, 'THINNESS', 'DOUBLE')
 arcpy.CalculateField_management(currentFile, 'THINNESS', '4 * math.pi * !Shape_Area!/(!Shape_Length! ** (2))', 'PYTHON_9.3')
 
 # Deleting temp files
+arcpy.AddMessage('Deleting temp files...')
 for file in deleteFiles:
 	arcpy.Delete_management(file)
 
