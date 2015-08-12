@@ -1,5 +1,7 @@
 # BuildoutAnalysis
 
+Read documentation pdf for more information!
+
 ## Overview
 A tool for calculating buildout numbers for parcels in NJ under current zoning and NO3 dilution standards. 
 - Created using a model outline from the NJ DEP
