@@ -76,12 +76,12 @@ def minimumLotSize(zoningData, outputWorkspace):
 	currentFile = arcpy.CopyFeatures_management(zoningData, outputWorkspace + '\\muni_minLotCopy')
 	return currentFile
 
-# Cleans up the fields for the final output file
-def uglyFieldManagement(fc):
-	fields = [field.name for field in arcpy.ListFields(fc)]
-	for f in fields:
-		if 'FID' in f or '_1' in f:
-			arcpy.DeleteField_management(fc, f)
+### Cleans up the fields for the final output file
+##def uglyFieldManagement(fc):
+##	fields = [field.name for field in arcpy.ListFields(fc)]
+##	for f in fields:
+##		if 'FID' in f or '_1' in f:
+##			arcpy.DeleteField_management(fc, f)
 
 # The following three methods correspond to the calculation of buildout numbers for both current zoning and Nitrate 
 # dilution standards. 
@@ -220,6 +220,7 @@ swqs = 'muni_swqs'
 landUse = 'muni_Land_Use_Land_Cover_2012'
 farms = 'muni_preserved_farms'
 sewer_area = 'muni_sewer_service_area'
+wp = 'muni_water_purveyors'
 
 # Calculate minimum lot size values for the individual zones
 arcpy.AddMessage('Calculating minimum lot sizes...')
@@ -298,7 +299,7 @@ currentFile = arcpy.Select_analysis(currentFile, 'muni_minimumLot_met', '\"Shape
 deleteFiles.append(currentFile)
 
 # Cleaning up ugly fields
-uglyFieldManagement(currentFile)
+#uglyFieldManagement(currentFile)
 
 # Calculate buildout for post-constraint erasure areas
 buildoutCalculations(currentFile, True)
@@ -325,8 +326,7 @@ del row, cursor
 
 # Dissolve parts of parcels on pams pin, sum the buildout numbers								        
 currentFile = arcpy.Dissolve_management(currentFile, 'muni_result_combined', ['PAMS_PIN', 'Zone_ID', 'SYSTEM'], [['CZBO_POST', 'SUM'], ['NO3BO_POST', 'SUM'], ['CZBO_PRE', 'SUM'], ['NO3BO_PRE', 'SUM']])
-										
-
+deleteFiles.append(currentFile)
 
 arcpy.AddField_management(currentFile, 'CANSP_PRE', 'SHORT', '', '', '', 'Can Split Pre-const. Erase')
 arcpy.AddField_management(currentFile, 'CANSP_POST', 'SHORT', '', '', '', 'Can Split Post-const. Erase')
@@ -351,9 +351,6 @@ arcpy.DeleteField_management(currentFile, 'SUM_CZBO_PRE')
 arcpy.DeleteField_management(currentFile, 'SUM_NO3BO_POST')
 arcpy.DeleteField_management(currentFile, 'SUM_NO3BO_PRE')
 
-# Rename the final file
-currentFile = arcpy.Rename_management(currentFile, '%s_final_result'%(muniName))
-
 # Change the 0's to 1's for the buildout numbers
 cursor = arcpy.UpdateCursor(currentFile)
 for row in cursor:
@@ -369,9 +366,34 @@ for row in cursor:
 	cursor.updateRow(row)
 del row, cursor
 
+# Appending water purveyor and watershed data
+currentFile = arcpy.Identity_analysis(currentFile, wp, 'muni_appended_wps')
+deleteFiles.append(currentFile)
+currentFile = arcpy.Identity_analysis(currentFile, NO3_densities, 'muni_appended_wsheds')
+deleteFiles.append(currentFile)
+
+
+# Doing some ugly fields management for the appended data
+goodFields = ['OBJECTID', 'Shape', 'Shape_Area', 'Shape_Length', 'HUC11', 'W_NAME', 'SEPDENS', 'AVGRECHRG', 'PURVNAME']
+fields = [field.name for field in arcpy.ListFields(wp)] # water purveyor fields
+fields.extend([field.name for field in arcpy.ListFields(NO3_densities)]) # watershed fields
+
+for f in fields:
+        if f not in goodFields:
+                arcpy.DeleteField_management(currentFile, f)
+                
+fields = [field.name for field in arcpy.ListFields(currentFile)]
+
+for f in fields: # deleting other ugly fields
+        if 'FID' in f or '_1' in f:
+                arcpy.DeleteField_management(currentFile, f)
+
 # Thinness ratio
 arcpy.AddField_management(currentFile, 'THINNESS', 'DOUBLE')
 arcpy.CalculateField_management(currentFile, 'THINNESS', '4 * math.pi * !Shape_Area!/(!Shape_Length! ** (2))', 'PYTHON_9.3')
+
+# Rename the final file
+currentFile = arcpy.Rename_management(currentFile, '%s_final_result'%(muniName))
 
 # Deleting temp files
 arcpy.AddMessage('Deleting temp files...')
