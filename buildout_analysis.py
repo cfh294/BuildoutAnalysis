@@ -241,6 +241,9 @@ arcpy.SelectLayerByAttribute_management(arcpy.MakeFeatureLayer_management(curren
 										'\"FID_muni_parcels\" = -1')
 arcpy.DeleteFeatures_management('zone_lyr')
 
+# Minimum Lot Size Select
+currentFile = arcpy.Select_analysis(currentFile, 'muni_meet_minimum', '\"Shape_Area\" >= \"MINLOT\"')
+
 # Append the sewer service data
 arcpy.AddMessage('Identifying sewer and septic areas...')
 currentFile = arcpy.Identity_analysis(currentFile, sewer_area, 'muni_sewer_service_ID')
