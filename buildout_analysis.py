@@ -179,6 +179,7 @@ arcpy.env.overwriteOutput = True
 zoning = arcpy.GetParameterAsText(0)
 muniName = arcpy.GetParameterAsText(1)
 outputWorkspace = arcpy.GetParameterAsText(3)
+constraintsWorkspace = arcpy.GetParameterAsText(4)
 
 # An array that will contain all temp files that will be deleted at the very end
 deleteFiles = []
@@ -198,7 +199,7 @@ if arcpy.GetParameterAsText(2):
         deleteFiles.append(add_constraints)
                 
 
-arcpy.env.workspace = 'R:\\Salem\\model_inputs.gdb'
+arcpy.env.workspace = constraintsWorkspace
 
 inputs = ['nhd_waterbodies', 'NO3_densities',  'openspace_county', 'openspace_state',  'parcels',  'preserved_farms', 
 		  'swqs',  'water_purveyors',  'wetlands', 'Land_Use_Land_Cover_2012', 'sewer_service_area']
@@ -233,7 +234,7 @@ deleteFiles.append(zoned_OS)
 
 # Create zoning by parcels
 arcpy.AddMessage('Appending zoning data...')
-currentFile = arcpy.Identity_analysis(zoning, parcels, 'muni_zoning_by_parcels')
+currentFile = arcpy.Identity_analysis(parcels, zoning, 'muni_zoning_by_parcels')
 deleteFiles.append(currentFile)
 
 # Delete areas that are coincident with streets
@@ -242,7 +243,7 @@ arcpy.SelectLayerByAttribute_management(arcpy.MakeFeatureLayer_management(curren
 arcpy.DeleteFeatures_management('zone_lyr')
 
 # Minimum Lot Size Select
-currentFile = arcpy.Select_analysis(currentFile, 'muni_meet_minimum', '\"Shape_Area\" >= \"MINLOT\"')
+# currentFile = arcpy.Select_analysis(currentFile, 'muni_meet_minimum', '\"Shape_Area\" >= \"MINLOT\"')
 
 # Append the sewer service data
 arcpy.AddMessage('Identifying sewer and septic areas...')
