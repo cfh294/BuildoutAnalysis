@@ -329,7 +329,7 @@ for row in cursor:
 del row, cursor
 
 # Dissolve parts of parcels on pams pin, sum the buildout numbers								        
-currentFile = arcpy.Dissolve_management(currentFile, 'muni_result_combined', ['PAMS_PIN', 'Zone_ID', 'SYSTEM'], [['CZBO_POST', 'SUM'], ['NO3BO_POST', 'SUM'], ['CZBO_PRE', 'SUM'], ['NO3BO_PRE', 'SUM']])
+currentFile = arcpy.Dissolve_management(currentFile, 'muni_result_combined', ['PAMS_PIN', 'SYSTEM'], [['CZBO_POST', 'SUM'], ['NO3BO_POST', 'SUM'], ['CZBO_PRE', 'SUM'], ['NO3BO_PRE', 'SUM']])
 deleteFiles.append(currentFile)
 
 arcpy.AddField_management(currentFile, 'CANSP_PRE', 'SHORT', '', '', '', 'Can Split Pre-const. Erase')
@@ -371,26 +371,26 @@ for row in cursor:
 del row, cursor
 
 # Appending water purveyor and watershed data
-currentFile = arcpy.Identity_analysis(currentFile, wp, 'muni_appended_wps')
-deleteFiles.append(currentFile)
-currentFile = arcpy.Identity_analysis(currentFile, NO3_densities, 'muni_appended_wsheds')
-deleteFiles.append(currentFile)
+##currentFile = arcpy.Identity_analysis(currentFile, wp, 'muni_appended_wps')
+##deleteFiles.append(currentFile)
+##currentFile = arcpy.Identity_analysis(currentFile, NO3_densities, 'muni_appended_wsheds')
+##deleteFiles.append(currentFile)
 
 
-# Doing some ugly fields management for the appended data
-goodFields = ['OBJECTID', 'Shape', 'Shape_Area', 'Shape_Length', 'HUC11', 'W_NAME', 'SEPDENS', 'AVGRECHRG', 'PURVNAME']
-fields = [field.name for field in arcpy.ListFields(wp)] # water purveyor fields
-fields.extend([field.name for field in arcpy.ListFields(NO3_densities)]) # watershed fields
-
-for f in fields:
-        if f not in goodFields:
-                arcpy.DeleteField_management(currentFile, f)
-                
-fields = [field.name for field in arcpy.ListFields(currentFile)]
-
-for f in fields: # deleting other ugly fields
-        if 'FID' in f or '_1' in f:
-                arcpy.DeleteField_management(currentFile, f)
+### Doing some ugly fields management for the appended data
+##goodFields = ['OBJECTID', 'Shape', 'Shape_Area', 'Shape_Length', 'HUC11', 'W_NAME', 'SEPDENS', 'AVGRECHRG', 'PURVNAME']
+##fields = [field.name for field in arcpy.ListFields(wp)] # water purveyor fields
+##fields.extend([field.name for field in arcpy.ListFields(NO3_densities)]) # watershed fields
+##
+##for f in fields:
+##        if f not in goodFields:
+##                arcpy.DeleteField_management(currentFile, f)
+##                
+##fields = [field.name for field in arcpy.ListFields(currentFile)]
+##
+##for f in fields: # deleting other ugly fields
+##        if 'FID' in f or '_1' in f:
+##                arcpy.DeleteField_management(currentFile, f)
 
 # Thinness ratio
 arcpy.AddField_management(currentFile, 'THINNESS', 'DOUBLE')
