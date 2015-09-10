@@ -41,8 +41,7 @@ if __name__ == '__main__':
 
     # global variables
     prj = arcpy.Describe(zoning).spatialReference
-    validZones = set()
-
+    
     # Grabbing the name of the shape field from the zoning data
     shapeFieldName = arcpy.Describe(zoning).shapeFieldName
     points = [] # contains all point files that are to be created
@@ -55,7 +54,6 @@ if __name__ == '__main__':
         minLot = row.getValue('MINLOT')
         if minLot > 0: # some preserved zones are marked with a 0 for minimum lot size in our data
             zoneText = stripDash(row.getValue('Zone_ID'))
-            validZones.add(zoneText)
             arcpy.AddMessage(zoneText)
 
             # Grabbing the needed information to create zone-specific fishnets. 
